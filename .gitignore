@@ -1,6 +1,15 @@
 # IDE
 .idea/
 
+# Node Modules
+node_modules/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
 # Python
 .venv/
 venv/
