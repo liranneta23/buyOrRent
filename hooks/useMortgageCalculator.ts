@@ -126,7 +126,7 @@ export function useMortgageCalculator(inputs: Inputs): MortgageResults {
     const ozbMonthly = 0.001 * housePrice / 12;  // Onroerende zaak belasting
 
     // One-time costs
-    const upfront = (0.02 * housePrice * 0.5) + 10_000;  // transfer tax (half NHG) + notary/etc.
+    const upfront = (0.02 * housePrice * 0.5) + 10_000;  // transfer tax + notary/etc.
     const selling = 8_000;                                 // makelaar + notary when selling
 
     // Periodic cost totals over comparison window

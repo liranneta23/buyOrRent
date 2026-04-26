@@ -26,9 +26,9 @@ const DEFAULT_INPUTS: Inputs = {
   housePrice: 500_000,
   downPayment: 50_000,
   monthlyRent: 2_380,
-  annualRate: 0.0371,
+  annualRate: 0.04,
   years: 3,
-  marketGrowth: 0.02,
+  marketGrowth: 0.04,
 };
 
 export default function Home() {
@@ -58,7 +58,7 @@ export default function Home() {
             <div className="hidden sm:flex items-center gap-2 text-[10px]">
               <div className="flex items-center gap-1 rounded-full border border-slate-800 px-2 py-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span className="text-slate-500">NHG Rate: {(inputs.annualRate * 100).toFixed(2)}%</span>
+                <span className="text-slate-500">Interest Rate: {(inputs.annualRate * 100).toFixed(2)}%</span>
               </div>
               <div className="flex items-center gap-1 rounded-full border border-slate-800 px-2 py-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />

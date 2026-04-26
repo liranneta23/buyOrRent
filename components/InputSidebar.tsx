@@ -104,7 +104,7 @@ export function InputSidebar({ inputs, onChange }: Props) {
             step={0.05}
             displayValue={`${(inputs.annualRate * 100).toFixed(2)}%`}
             onChange={(v) => set('annualRate', v / 100)}
-            subLabel="NHG-guaranteed rate is currently ~3.71%"
+            subLabel="The average rate is currently ~4%"
           />
           <Slider
             label="Comparison Period"
@@ -140,11 +140,12 @@ export function InputSidebar({ inputs, onChange }: Props) {
           <Slider
             label="Annual House Price Growth"
             value={Math.round(inputs.marketGrowth * 1000) / 10}
-            min={-5}
-            max={5}
+            min={-10}
+            max={10}
             step={0.5}
             displayValue={`${inputs.marketGrowth >= 0 ? '+' : ''}${(inputs.marketGrowth * 100).toFixed(1)}%`}
             onChange={(v) => set('marketGrowth', v / 100)}
+            subLabel="The growth in the last 10 years was about 8% per year"
             accent="violet"
           />
           <div className="flex justify-between text-[10px]">
@@ -163,11 +164,11 @@ export function InputSidebar({ inputs, onChange }: Props) {
         {[
           ['VVE / Service', '€250/mo'],
           ['Life Insurance', '€20/mo'],
-          ['OZB Tax', '0.10% p.a.'],
-          ['Eigenwoningforfait', '0.35% WOZ'],
+          ['OZB Tax', '0.10% WOZ value per year'],
+          ['Eigenwoningforfait', '0.35% WOZ value per year'],
           ['Tax Relief Rate', '37.56%'],
           ['Mortgage Term', '30 years'],
-          ['Transfer Tax', '2% (½ NHG)'],
+          ['Transfer Tax', '2% (if older than 35)'],
           ['Selling Costs', '€8,000'],
         ].map(([k, v]) => (
           <div key={k} className="flex justify-between text-[10px]">
