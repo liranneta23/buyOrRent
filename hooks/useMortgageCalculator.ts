@@ -73,9 +73,9 @@ export interface MortgageTypeStats {
   totalSunkCosts: number;
   totalEquitySaved: number;
   remainingLoanBalance: number;
-  profitPessimistic: number;  // market @ -2 %
+  profitPessimistic: number;  // market @ -4 %
   profitFlat: number;         // market @ 0 %
-  profitOptimistic: number;   // market @ +2 %
+  profitOptimistic: number;   // market @ +4 %
   profitCustom: number;       // market @ marketGrowth
   profitAt: (growthFraction: number) => number;
 }
@@ -157,9 +157,9 @@ export function useMortgageCalculator(inputs: Inputs): MortgageResults {
       totalSunkCosts: Math.round(annuityTotalSunk),
       totalEquitySaved: Math.round(annuityEquity),
       remainingLoanBalance: Math.round(annuityRemainingLoan),
-      profitPessimistic: annuityProfitAt(-0.02),
+      profitPessimistic: annuityProfitAt(-0.04),
       profitFlat: annuityProfitAt(0),
-      profitOptimistic: annuityProfitAt(0.02),
+      profitOptimistic: annuityProfitAt(0.04),
       profitCustom: annuityProfitAt(marketGrowth),
       profitAt: annuityProfitAt,
     };
@@ -186,9 +186,9 @@ export function useMortgageCalculator(inputs: Inputs): MortgageResults {
       totalSunkCosts: Math.round(linearTotalSunk),
       totalEquitySaved: Math.round(linearEquity),
       remainingLoanBalance: Math.round(linearRemainingLoan),
-      profitPessimistic: linearProfitAt(-0.02),
+      profitPessimistic: linearProfitAt(-0.04),
       profitFlat: linearProfitAt(0),
-      profitOptimistic: linearProfitAt(0.02),
+      profitOptimistic: linearProfitAt(0.04),
       profitCustom: linearProfitAt(marketGrowth),
       profitAt: linearProfitAt,
     };

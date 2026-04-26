@@ -121,9 +121,9 @@ export function ComparisonTable({ results, inputs }: Props) {
             {/* Profit Scenarios */}
             <Divider label="Net Profit by Market Scenario" />
             {[
-              { label: 'Pessimistic', sub: 'House prices @ −2%/yr', ap: annuity.profitPessimistic, lp: linear.profitPessimistic },
+              { label: 'Pessimistic', sub: 'House prices @ −4%/yr', ap: annuity.profitPessimistic, lp: linear.profitPessimistic },
               { label: 'Flat Market', sub: 'House prices @ 0%/yr', ap: annuity.profitFlat, lp: linear.profitFlat },
-              { label: 'Optimistic', sub: 'House prices @ +2%/yr', ap: annuity.profitOptimistic, lp: linear.profitOptimistic },
+              { label: 'Optimistic', sub: 'House prices @ +4%/yr', ap: annuity.profitOptimistic, lp: linear.profitOptimistic },
               { label: 'Custom (selected)', sub: `House prices @ ${customLabel}`, ap: annuity.profitCustom, lp: linear.profitCustom },
             ].map(({ label, sub, ap, lp }) => (
               <tr
@@ -145,9 +145,9 @@ export function ComparisonTable({ results, inputs }: Props) {
             {/* vs Renting */}
             <Divider label="Advantage vs Renting" />
             {[
-              { label: 'vs Renting @ −2%', ap: annuity.profitPessimistic + rentingCost, lp: linear.profitPessimistic + rentingCost },
+              { label: 'vs Renting @ −4%', ap: annuity.profitPessimistic + rentingCost, lp: linear.profitPessimistic + rentingCost },
               { label: 'vs Renting @ 0%', ap: annuity.profitFlat + rentingCost, lp: linear.profitFlat + rentingCost },
-              { label: 'vs Renting @ +2%', ap: annuity.profitOptimistic + rentingCost, lp: linear.profitOptimistic + rentingCost },
+              { label: 'vs Renting @ +4%', ap: annuity.profitOptimistic + rentingCost, lp: linear.profitOptimistic + rentingCost },
               { label: `vs Renting @ ${customLabel.split(' ')[0]}`, ap: annuity.profitCustom + rentingCost, lp: linear.profitCustom + rentingCost },
             ].map(({ label, ap, lp }) => (
               <tr
