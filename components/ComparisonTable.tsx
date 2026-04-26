@@ -49,8 +49,8 @@ function Divider({ label }: { label: string }) {
 
 export function ComparisonTable({ results, inputs }: Props) {
   const { annuity, linear, rentingCost } = results;
-  const monthlyRent = inputs.monthlyRent;
   const { years, marketGrowth } = inputs;
+  const avgMonthlyRent = Math.round(rentingCost / (years * 12));
   const rentingProfit = -rentingCost; // renting position is always negative
 
   const customLabel = `${marketGrowth >= 0 ? '+' : ''}${(marketGrowth * 100).toFixed(1)}% (selected)`;
@@ -90,7 +90,7 @@ export function ComparisonTable({ results, inputs }: Props) {
               <RowLabel sub="Average over period">Net Monthly Outflow</RowLabel>
               <MoneyCell value={-annuity.avgMonthlyNet} />
               <MoneyCell value={-linear.avgMonthlyNet} />
-              <MoneyCell value={-monthlyRent} />
+              <MoneyCell value={-avgMonthlyRent} />
             </tr>
 
             {/* Cost Breakdown */}

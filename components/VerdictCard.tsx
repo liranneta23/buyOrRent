@@ -174,8 +174,8 @@ export function VerdictCard({ results, inputs }: Props) {
             value={formatEuro(linear.avgMonthlyNet) + '/mo'}
           />
           <StatPill
-            label="Rent Monthly"
-            value={formatEuro(inputs.monthlyRent) + '/mo'}
+            label="Avg Rent/mo"
+            value={formatEuro(Math.round(rentingCost / (inputs.years * 12))) + '/mo'}
           />
           <StatPill
             label="Total Rent Cost"

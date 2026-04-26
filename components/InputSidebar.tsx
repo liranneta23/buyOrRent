@@ -121,16 +121,28 @@ export function InputSidebar({ inputs, onChange }: Props) {
       {/* Rental Reference */}
       <div>
         <SectionTitle>Rental Reference</SectionTitle>
-        <Slider
-          label="Equivalent Monthly Rent"
-          value={inputs.monthlyRent}
-          min={500}
-          max={5_000}
-          step={50}
-          displayValue={formatEuro(inputs.monthlyRent) + '/mo'}
-          onChange={(v) => set('monthlyRent', v)}
-          subLabel="What you'd pay to rent a similar property"
-        />
+        <div className="space-y-5">
+          <Slider
+            label="Equivalent Monthly Rent"
+            value={inputs.monthlyRent}
+            min={500}
+            max={5_000}
+            step={50}
+            displayValue={formatEuro(inputs.monthlyRent) + '/mo'}
+            onChange={(v) => set('monthlyRent', v)}
+            subLabel="What you'd pay to rent a similar property"
+          />
+          <Slider
+            label="Annual Rent Increase"
+            value={Math.round(inputs.rentIncrease * 1000) / 10}
+            min={0}
+            max={10}
+            step={0.5}
+            displayValue={`+${(inputs.rentIncrease * 100).toFixed(1)}%/yr`}
+            onChange={(v) => set('rentIncrease', v / 100)}
+            subLabel="Dutch avg rent increase was ~5% in recent years"
+          />
+        </div>
       </div>
 
       {/* Market Sentiment */}

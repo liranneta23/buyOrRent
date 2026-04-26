@@ -29,6 +29,7 @@ const DEFAULT_INPUTS: Inputs = {
   annualRate: 0.04,
   years: 3,
   marketGrowth: 0.04,
+  rentIncrease: 0.03,
 };
 
 export default function Home() {
@@ -48,7 +49,7 @@ export default function Home() {
             <div>
               <span className="font-semibold text-slate-100 text-sm">BuyOrRent.nl</span>
               <span className="ml-2 text-[10px] text-slate-600 hidden sm:inline">
-                Dutch NL 2026 · Annuity vs. Linear Mortgage
+                Dutch NL 2026 · Rent vs. Annuity Mortgage vs. Linear Mortgage
               </span>
             </div>
           </div>

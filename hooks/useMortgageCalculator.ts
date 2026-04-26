@@ -65,6 +65,7 @@ export interface Inputs {
   annualRate: number;    // e.g. 0.0371
   years: number;
   marketGrowth: number;  // fraction, e.g. 0.02 for 2 %
+  rentIncrease: number;  // annual rent increase fraction, e.g. 0.03 for 3 %
 }
 
 export interface MortgageTypeStats {
@@ -113,7 +114,7 @@ export interface MortgageResults {
 
 export function useMortgageCalculator(inputs: Inputs): MortgageResults {
   return useMemo(() => {
-    const { housePrice, downPayment, monthlyRent, annualRate, years, marketGrowth } = inputs;
+    const { housePrice, downPayment, monthlyRent, annualRate, years, marketGrowth, rentIncrease } = inputs;
 
     const loan = Math.max(0, housePrice - downPayment);
     const monthlyRate = annualRate / 12;
@@ -193,7 +194,13 @@ export function useMortgageCalculator(inputs: Inputs): MortgageResults {
     };
 
     // ── Renting ──────────────────────────────────────────────────────────────
-    const rentingCost = monthlyRent * months; // positive — total cash out
+    // Geometric series: rent grows by rentIncrease each year
+    // Total = monthlyRent × 12 × Σ(i=0..years-1) (1+r)^i
+    const cumulativeRentAt = (y: number): number => {
+      if (rentIncrease === 0) return monthlyRent * y * 12;
+      return monthlyRent * 12 * (Math.pow(1 + rentIncrease, y) - 1) / rentIncrease;
+    };
+    const rentingCost = cumulativeRentAt(years); // positive — total cash out
 
     // ── Chart Data (walk month-by-month for accuracy) ─────────────────────
     const chartYears = Math.max(years, 10);
@@ -235,7 +242,7 @@ export function useMortgageCalculator(inputs: Inputs): MortgageResults {
         linearEquity: Math.round(linearEquityRunning),
         annuityNet: Math.round(annuityEquityRunning + appGain - aSunk),
         linearNet: Math.round(linearEquityRunning + appGain - lSunk),
-        rentingNet: -Math.round(monthlyRent * yMonths),
+        rentingNet: -Math.round(cumulativeRentAt(y)),
       });
     }
 
