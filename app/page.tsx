@@ -6,7 +6,7 @@ import { InputSidebar } from '@/components/InputSidebar';
 import { VerdictCard } from '@/components/VerdictCard';
 import { ComparisonTable } from '@/components/ComparisonTable';
 import { MarketSentimentTable } from '@/components/MarketSentimentTable';
-import { useMortgageCalculator, type Inputs } from '@/hooks/useMortgageCalculator';
+import { useMortgageCalculator, DEFAULT_ASSUMPTIONS, type Inputs } from '@/hooks/useMortgageCalculator';
 
 // Dynamic import avoids SSR issues with Recharts + ResponsiveContainer
 const EquityChart = dynamic(
@@ -25,11 +25,13 @@ function ChartSkeleton() {
 const DEFAULT_INPUTS: Inputs = {
   housePrice: 500_000,
   downPayment: 50_000,
+  transferTaxRate: 2,
   monthlyRent: 2_380,
   annualRate: 0.04,
   years: 3,
   marketGrowth: 0.04,
   rentIncrease: 0.03,
+  assumptions: DEFAULT_ASSUMPTIONS,
 };
 
 export default function Home() {

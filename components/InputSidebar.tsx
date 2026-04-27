@@ -1,6 +1,7 @@
 'use client';
 
 import { Slider } from './ui/Slider';
+import { AssumptionsEditor } from './AssumptionsEditor';
 import { formatEuro } from '@/lib/utils';
 import type { Inputs } from '@/hooks/useMortgageCalculator';
 
@@ -70,6 +71,39 @@ export function InputSidebar({ inputs, onChange }: Props) {
             displayValue={formatEuro(inputs.downPayment, true)}
             onChange={(v) => set('downPayment', v)}
           />
+          {/* Transfer tax — percentage, auto-linked to house price */}
+          <div className="space-y-2">
+            <div className="flex items-baseline justify-between">
+              <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                Transfer Tax
+              </label>
+              <div className="text-right">
+                <span className="text-sm font-semibold font-mono text-emerald-400">
+                  {inputs.transferTaxRate.toFixed(1)}%
+                </span>
+                <span className="text-[10px] text-slate-600 ml-1.5">
+                  = {formatEuro(inputs.transferTaxRate / 100 * inputs.housePrice, true)}
+                </span>
+              </div>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={10}
+              step={0.5}
+              value={inputs.transferTaxRate}
+              onChange={e => set('transferTaxRate', Number(e.target.value))}
+              style={{
+                width: '100%',
+                background: `linear-gradient(to right, #10b981 0%, #10b981 ${(inputs.transferTaxRate / 10) * 100}%, #1e293b ${(inputs.transferTaxRate / 10) * 100}%, #1e293b 100%)`,
+              }}
+            />
+            <div className="flex justify-between text-[10px] text-slate-700">
+              <span>0%</span>
+              <span className="text-slate-600 text-[9px]">auto-updates with house price</span>
+              <span>10%</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -168,26 +202,13 @@ export function InputSidebar({ inputs, onChange }: Props) {
         </div>
       </div>
 
-      {/* Assumptions */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3 space-y-1.5">
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">
-          Fixed Assumptions
-        </div>
-        {[
-          ['VVE / Service', '€250/mo'],
-          ['Life Insurance', '€20/mo'],
-          ['OZB Tax', '0.10% WOZ value per year'],
-          ['Eigenwoningforfait', '0.35% WOZ value per year'],
-          ['Tax Relief Rate', '37.56%'],
-          ['Mortgage Term', '30 years'],
-          ['Transfer Tax', '2% (if older than 35)'],
-          ['Selling Costs', '€8,000'],
-        ].map(([k, v]) => (
-          <div key={k} className="flex justify-between text-[10px]">
-            <span className="text-slate-600">{k}</span>
-            <span className="text-slate-500 font-mono">{v}</span>
-          </div>
-        ))}
+      {/* Cost Assumptions */}
+      <div>
+        <SectionTitle>Cost Assumptions</SectionTitle>
+        <AssumptionsEditor
+          assumptions={inputs.assumptions}
+          onChange={(assumptions) => set('assumptions', assumptions)}
+        />
       </div>
     </div>
   );

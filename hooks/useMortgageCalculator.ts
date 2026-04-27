@@ -2,29 +2,18 @@
 
 import { useMemo } from 'react';
 
-// ── Dutch NL 2026 Constants ──────────────────────────────────────────────────
+// ── Dutch NL 2026 Constants (percentage-based, not user-editable) ────────────
 const TAX_REFUND_RATE = 0.3756;   // Max hypotheekrenteaftrek
 const TOTAL_TERM_MONTHS = 360;    // 30-year mortgage
-const VVE = 250;                  // Monthly VVE/service costs (€)
-const LIFE_INS = 20;              // Monthly life insurance (€)
 
 // ── Financial Math ───────────────────────────────────────────────────────────
 
-/** Annuity PMT formula — matches numpy_financial.pmt */
 function pmt(rate: number, nper: number, pv: number): number {
   if (rate === 0) return pv / nper;
   return (pv * rate * Math.pow(1 + rate, nper)) / (Math.pow(1 + rate, nper) - 1);
 }
 
-/**
- * Walk through annuity amortization for `months`, return average monthly
- * interest paid. Mirrors get_average_annuity_interest() in main.py.
- */
-function calcAnnuityAvgInterest(
-  rate: number,
-  loan: number,
-  months: number,
-): number {
+function calcAnnuityAvgInterest(rate: number, loan: number, months: number): number {
   if (months === 0 || loan === 0) return 0;
   let balance = loan;
   let totalInterest = 0;
@@ -37,15 +26,7 @@ function calcAnnuityAvgInterest(
   return totalInterest / months;
 }
 
-/**
- * Walk through linear amortization for `months`, return average monthly
- * interest paid. Mirrors get_average_linear_interest() in main.py.
- */
-function calcLinearAvgInterest(
-  rate: number,
-  loan: number,
-  months: number,
-): number {
+function calcLinearAvgInterest(rate: number, loan: number, months: number): number {
   if (months === 0 || loan === 0) return 0;
   const monthlyPrincipal = loan / TOTAL_TERM_MONTHS;
   let totalInterest = 0;
@@ -58,14 +39,30 @@ function calcLinearAvgInterest(
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+export interface Assumption {
+  id: string;
+  label: string;
+  amount: number;
+  type: 'one-time' | 'monthly' | 'annual';
+}
+
+export const DEFAULT_ASSUMPTIONS: Assumption[] = [
+  { id: 'vve',     label: 'VVE / Service Costs',    amount: 250,    type: 'monthly'  },
+  { id: 'life',    label: 'Life Insurance',          amount: 20,     type: 'monthly'  },
+  { id: 'notary',  label: 'Notary & Advisor Fees',   amount: 10_000, type: 'one-time' },
+  { id: 'selling', label: 'Selling Costs (realtor)', amount: 8_000,  type: 'one-time' },
+];
+
 export interface Inputs {
   housePrice: number;
   downPayment: number;
+  transferTaxRate: number; // percentage, e.g. 2 for 2%
   monthlyRent: number;
-  annualRate: number;    // e.g. 0.0371
+  annualRate: number;
   years: number;
-  marketGrowth: number;  // fraction, e.g. 0.02 for 2 %
-  rentIncrease: number;  // annual rent increase fraction, e.g. 0.03 for 3 %
+  marketGrowth: number;
+  rentIncrease: number;
+  assumptions: Assumption[];
 }
 
 export interface MortgageTypeStats {
@@ -73,10 +70,10 @@ export interface MortgageTypeStats {
   totalSunkCosts: number;
   totalEquitySaved: number;
   remainingLoanBalance: number;
-  profitPessimistic: number;  // market @ -4 %
-  profitFlat: number;         // market @ 0 %
-  profitOptimistic: number;   // market @ +4 %
-  profitCustom: number;       // market @ marketGrowth
+  profitPessimistic: number;
+  profitFlat: number;
+  profitOptimistic: number;
+  profitCustom: number;
   profitAt: (growthFraction: number) => number;
 }
 
@@ -84,13 +81,13 @@ export interface ChartPoint {
   year: number;
   annuityEquity: number;
   linearEquity: number;
-  annuityNet: number;    // net position if sold at this year
+  annuityNet: number;
   linearNet: number;
-  rentingNet: number;    // always negative — cumulative rent paid
+  rentingNet: number;
 }
 
 export interface SensitivityRow {
-  growth: number;          // percentage, e.g. -5 … +5
+  growth: number;
   annuityProfit: number;
   linearProfit: number;
   annuityVsRent: number;
@@ -100,52 +97,54 @@ export interface SensitivityRow {
 export interface MortgageResults {
   annuity: MortgageTypeStats;
   linear: MortgageTypeStats;
-  rentingCost: number;   // total rent paid (positive)
+  rentingCost: number;
   chartData: ChartPoint[];
   sensitivity: SensitivityRow[];
   bestMortgage: 'annuity' | 'linear';
-  betterThanRenting: number;  // positive = buying wins
+  betterThanRenting: number;
   loan: number;
-  ltv: number;           // Loan-To-Value ratio (0-1)
-  ewfMonthly: number;    // Eigenwoningforfait monthly
+  ltv: number;
+  ewfMonthly: number;
 }
 
 // ── Main Hook ────────────────────────────────────────────────────────────────
 
 export function useMortgageCalculator(inputs: Inputs): MortgageResults {
   return useMemo(() => {
-    const { housePrice, downPayment, monthlyRent, annualRate, years, marketGrowth, rentIncrease } = inputs;
+    const { housePrice, downPayment, transferTaxRate, monthlyRent, annualRate, years, marketGrowth, rentIncrease, assumptions } = inputs;
 
     const loan = Math.max(0, housePrice - downPayment);
     const monthlyRate = annualRate / 12;
     const months = years * 12;
     const ltv = housePrice > 0 ? loan / housePrice : 0;
 
-    // Shared monthly costs
-    // Eigenwoningforfait: imputed rental income tax (0.35 % of WOZ × marginal rate / 12)
+    // ── Percentage-based fixed costs ─────────────────────────────────────────
     const ewfMonthly = (0.0035 * housePrice) * TAX_REFUND_RATE / 12;
-    const ozbMonthly = 0.001 * housePrice / 12;  // Onroerende zaak belasting
+    const ozbMonthly = 0.001 * housePrice / 12;
 
-    // One-time costs
-    const upfront = (0.02 * housePrice * 0.5) + 10_000;  // transfer tax + notary/etc.
-    const selling = 8_000;                                 // makelaar + notary when selling
+    // ── User-defined assumptions ─────────────────────────────────────────────
+    const extraMonthly = assumptions.reduce((s, a) => {
+      if (a.type === 'monthly') return s + a.amount;
+      if (a.type === 'annual')  return s + a.amount / 12;
+      return s;
+    }, 0);
 
-    // Periodic cost totals over comparison window
-    const vveTotal = VVE * months;
-    const lifeTotal = LIFE_INS * months;
-    const ewfTotal = ewfMonthly * months;
-    const ozbTotal = ozbMonthly * months;
+    const transferTax = (transferTaxRate / 100) * housePrice;
+    const allOneTime = transferTax + assumptions
+      .filter(a => a.type === 'one-time')
+      .reduce((s, a) => s + a.amount, 0);
 
     // ── Annuity ──────────────────────────────────────────────────────────────
     const annuityPayment = pmt(monthlyRate, TOTAL_TERM_MONTHS, loan);
     const annuityAvgInterest = calcAnnuityAvgInterest(monthlyRate, loan, months);
     const annuityTaxRelief = annuityAvgInterest * TAX_REFUND_RATE;
     const annuityEquity = (annuityPayment - annuityAvgInterest) * months;
-    const annuityNetMonthly = annuityPayment - annuityTaxRelief + ewfMonthly + VVE + LIFE_INS;
+    const annuityNetMonthly = annuityPayment - annuityTaxRelief + ewfMonthly + extraMonthly;
     const annuityRemainingLoan = loan - annuityEquity;
     const annuityTotalSunk =
       (annuityAvgInterest - annuityTaxRelief) * months +
-      upfront + selling + vveTotal + ewfTotal + lifeTotal + ozbTotal;
+      allOneTime +
+      (extraMonthly + ewfMonthly + ozbMonthly) * months;
 
     const annuityProfitAt = (g: number) => {
       const appreciation = housePrice * (Math.pow(1 + g, years) - 1);
@@ -170,11 +169,12 @@ export function useMortgageCalculator(inputs: Inputs): MortgageResults {
     const linearTaxRelief = linearAvgInterest * TAX_REFUND_RATE;
     const linearAvgGross = linearPrincipal + linearAvgInterest;
     const linearEquity = linearPrincipal * months;
-    const linearNetMonthly = linearAvgGross - linearTaxRelief + ewfMonthly + VVE + LIFE_INS;
+    const linearNetMonthly = linearAvgGross - linearTaxRelief + ewfMonthly + extraMonthly;
     const linearRemainingLoan = loan - linearEquity;
     const linearTotalSunk =
       (linearAvgInterest - linearTaxRelief) * months +
-      upfront + selling + vveTotal + ewfTotal + lifeTotal + ozbTotal;
+      allOneTime +
+      (extraMonthly + ewfMonthly + ozbMonthly) * months;
 
     const linearProfitAt = (g: number) => {
       const appreciation = housePrice * (Math.pow(1 + g, years) - 1);
@@ -194,47 +194,39 @@ export function useMortgageCalculator(inputs: Inputs): MortgageResults {
     };
 
     // ── Renting ──────────────────────────────────────────────────────────────
-    // Geometric series: rent grows by rentIncrease each year
-    // Total = monthlyRent × 12 × Σ(i=0..years-1) (1+r)^i
     const cumulativeRentAt = (y: number): number => {
       if (rentIncrease === 0) return monthlyRent * y * 12;
       return monthlyRent * 12 * (Math.pow(1 + rentIncrease, y) - 1) / rentIncrease;
     };
-    const rentingCost = cumulativeRentAt(years); // positive — total cash out
+    const rentingCost = cumulativeRentAt(years);
 
-    // ── Chart Data (walk month-by-month for accuracy) ─────────────────────
+    // ── Chart Data ────────────────────────────────────────────────────────────
     const chartYears = Math.max(years, 10);
-
     let annuityBalance = loan;
     let annuityEquityRunning = 0;
     let annuityInterestRunning = 0;
     let linearEquityRunning = 0;
     let linearInterestRunning = 0;
-
     const chartData: ChartPoint[] = [];
 
     for (let y = 1; y <= chartYears; y++) {
       for (let m = 0; m < 12; m++) {
-        // Annuity month
         const aInt = annuityBalance * monthlyRate;
         const aPrinc = annuityPayment - aInt;
         annuityEquityRunning += aPrinc;
         annuityInterestRunning += aInt;
         annuityBalance -= aPrinc;
 
-        // Linear month
         const lBal = loan - linearEquityRunning;
-        const lInt = lBal * monthlyRate;
+        linearInterestRunning += lBal * monthlyRate;
         linearEquityRunning += linearPrincipal;
-        linearInterestRunning += lInt;
       }
 
       const yMonths = y * 12;
-      const overhead = (VVE + LIFE_INS + ewfMonthly + ozbMonthly) * yMonths;
+      const overhead = (extraMonthly + ewfMonthly + ozbMonthly) * yMonths;
       const appGain = housePrice * (Math.pow(1 + marketGrowth, y) - 1);
-
-      const aSunk = annuityInterestRunning * (1 - TAX_REFUND_RATE) + upfront + selling + overhead;
-      const lSunk = linearInterestRunning * (1 - TAX_REFUND_RATE) + upfront + selling + overhead;
+      const aSunk = annuityInterestRunning * (1 - TAX_REFUND_RATE) + allOneTime + overhead;
+      const lSunk = linearInterestRunning * (1 - TAX_REFUND_RATE) + allOneTime + overhead;
 
       chartData.push({
         year: y,
@@ -246,38 +238,20 @@ export function useMortgageCalculator(inputs: Inputs): MortgageResults {
       });
     }
 
-    // ── Sensitivity Table (-5 % → +5 %, step 0.5 %) ─────────────────────
+    // ── Sensitivity Table ─────────────────────────────────────────────────────
     const sensitivity: SensitivityRow[] = Array.from({ length: 21 }, (_, i) => {
       const g = -5 + i * 0.5;
       const gFrac = g / 100;
       const ap = annuityProfitAt(gFrac);
       const lp = linearProfitAt(gFrac);
-      return {
-        growth: g,
-        annuityProfit: ap,
-        linearProfit: lp,
-        annuityVsRent: ap + rentingCost,  // buying_profit - renting_profit(-rentingCost)
-        linearVsRent: lp + rentingCost,
-      };
+      return { growth: g, annuityProfit: ap, linearProfit: lp, annuityVsRent: ap + rentingCost, linearVsRent: lp + rentingCost };
     });
 
-    // ── Verdict ───────────────────────────────────────────────────────────
-    const bestMortgage =
-      annuity.profitCustom >= linear.profitCustom ? 'annuity' : 'linear';
+    // ── Verdict ───────────────────────────────────────────────────────────────
+    const bestMortgage = annuity.profitCustom >= linear.profitCustom ? 'annuity' : 'linear';
     const bestProfit = bestMortgage === 'annuity' ? annuity.profitCustom : linear.profitCustom;
     const betterThanRenting = Math.round(bestProfit + rentingCost);
 
-    return {
-      annuity,
-      linear,
-      rentingCost,
-      chartData,
-      sensitivity,
-      bestMortgage,
-      betterThanRenting,
-      loan,
-      ltv,
-      ewfMonthly,
-    };
+    return { annuity, linear, rentingCost, chartData, sensitivity, bestMortgage, betterThanRenting, loan, ltv, ewfMonthly };
   }, [inputs]);
 }

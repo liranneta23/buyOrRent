@@ -148,7 +148,7 @@ def print_comparison(results, years):
 # Execute
 house_price = 500000
 down_payments = 50000
-monthly_rent = 2380
+monthly_rent = 2200
 years = 3
 results = calculate_full_nl_comparison(house_price, down_payments, monthly_rent, years)
 print(f"Annuity Results: {results['Annuity']}")
