@@ -149,6 +149,30 @@ export function InputSidebar({ inputs, onChange }: Props) {
             displayValue={`${inputs.years} yr`}
             onChange={(v) => set('years', v)}
           />
+          {/* Tax relief rate — precise value, number input not slider */}
+          <div className="space-y-1.5">
+            <div className="flex items-baseline justify-between">
+              <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                Tax Relief Rate
+              </label>
+              <span className="text-[10px] text-slate-600">hypotheekrenteaftrek</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={55}
+                step={0.01}
+                value={inputs.taxReliefRate}
+                onChange={e => set('taxReliefRate', Math.min(55, Math.max(0, parseFloat(e.target.value) || 0)))}
+                className="flex-1 bg-slate-800/60 border border-slate-700/40 rounded-lg px-3 py-2 text-sm text-slate-200 font-mono text-right focus:outline-none focus:border-emerald-700/70 transition-colors"
+              />
+              <span className="text-sm text-slate-500 font-medium">%</span>
+            </div>
+            <p className="text-[10px] text-slate-600">
+              2026 max is 37.56% · use your actual marginal rate
+            </p>
+          </div>
         </div>
       </div>
 

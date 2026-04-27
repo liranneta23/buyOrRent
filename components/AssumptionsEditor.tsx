@@ -147,7 +147,6 @@ export function AssumptionsEditor({ assumptions, onChange }: Props) {
         {[
           ['Eigenwoningforfait', '0.35% WOZ × tax relief% / yr'],
           ['Property Tax (OZB)', '0.10% WOZ / yr'],
-          ['Tax Relief Rate', '37.56%'],
           ['Mortgage Term', '30 years'],
         ].map(([k, v]) => (
           <div key={k} className="flex justify-between text-[10px]">

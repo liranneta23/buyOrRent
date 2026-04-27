@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 
 // ── Dutch NL 2026 Constants (percentage-based, not user-editable) ────────────
-const TAX_REFUND_RATE = 0.3756;   // Max hypotheekrenteaftrek
 const TOTAL_TERM_MONTHS = 360;    // 30-year mortgage
 
 // ── Financial Math ───────────────────────────────────────────────────────────
@@ -47,18 +46,18 @@ export interface Assumption {
 }
 
 export const DEFAULT_ASSUMPTIONS: Assumption[] = [
-  { id: 'vve',     label: 'VVE / Service Costs',    amount: 250,    type: 'monthly'  },
-  { id: 'life',    label: 'Life Insurance',          amount: 20,     type: 'monthly'  },
-  { id: 'notary',  label: 'Notary & Advisor Fees',   amount: 10_000, type: 'one-time' },
-  { id: 'selling', label: 'Selling Costs (realtor)', amount: 8_000,  type: 'one-time' },
+  { id: 'vve',    label: 'VVE / Service Costs',  amount: 250,    type: 'monthly'  },
+  { id: 'life',   label: 'Life Insurance',        amount: 20,     type: 'monthly'  },
+  { id: 'notary', label: 'Notary & Advisor Fees', amount: 10_000, type: 'one-time' },
 ];
 
 export interface Inputs {
   housePrice: number;
   downPayment: number;
-  transferTaxRate: number; // percentage, e.g. 2 for 2%
+  transferTaxRate: number;  // percentage, e.g. 2 for 2%
   monthlyRent: number;
   annualRate: number;
+  taxReliefRate: number;    // percentage, e.g. 37.56
   years: number;
   marketGrowth: number;
   rentIncrease: number;
@@ -111,7 +110,8 @@ export interface MortgageResults {
 
 export function useMortgageCalculator(inputs: Inputs): MortgageResults {
   return useMemo(() => {
-    const { housePrice, downPayment, transferTaxRate, monthlyRent, annualRate, years, marketGrowth, rentIncrease, assumptions } = inputs;
+    const { housePrice, downPayment, transferTaxRate, monthlyRent, annualRate, taxReliefRate, years, marketGrowth, rentIncrease, assumptions } = inputs;
+    const TAX_REFUND_RATE = taxReliefRate / 100;
 
     const loan = Math.max(0, housePrice - downPayment);
     const monthlyRate = annualRate / 12;
