@@ -100,7 +100,7 @@ export function InputSidebar({ inputs, onChange }: Props) {
             />
             <div className="flex justify-between text-[10px] text-slate-700">
               <span>0%</span>
-              <span className="text-slate-600 text-[9px]">auto-updates with house price</span>
+              <span className="text-slate-600 text-[9px]">2% if buyer is above 35</span>
               <span>10%</span>
             </div>
           </div>
