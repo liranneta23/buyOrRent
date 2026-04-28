@@ -21,6 +21,7 @@ interface Props {
   chartData: ChartPoint[];
   years: number;
   marketGrowth: number;
+  breakevenYear?: number | null;
 }
 
 type View = 'net' | 'equity';
@@ -58,7 +59,7 @@ function CustomTooltip({ active, payload, label }: {
   );
 }
 
-export function EquityChart({ chartData, years, marketGrowth }: Props) {
+export function EquityChart({ chartData, years, marketGrowth, breakevenYear }: Props) {
   const [view, setView] = useState<View>('net');
 
   const sentimentLabel = marketGrowth === 0
@@ -147,6 +148,15 @@ export function EquityChart({ chartData, years, marketGrowth }: Props) {
                 strokeWidth={1.5}
                 label={{ value: `${years}yr`, position: 'insideTopRight', fill: '#a78bfa', fontSize: 10 }}
               />
+              {breakevenYear != null && breakevenYear !== years && (
+                <ReferenceLine
+                  x={breakevenYear}
+                  stroke="#f59e0b"
+                  strokeDasharray="3 3"
+                  strokeWidth={1.5}
+                  label={{ value: `Break-even yr ${breakevenYear}`, position: 'insideTopLeft', fill: '#f59e0b', fontSize: 10 }}
+                />
+              )}
               <Area
                 type="monotone"
                 dataKey="annuityNet"

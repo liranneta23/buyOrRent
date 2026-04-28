@@ -101,6 +101,7 @@ export interface MortgageResults {
   sensitivity: SensitivityRow[];
   bestMortgage: 'annuity' | 'linear';
   betterThanRenting: number;
+  breakevenYear: number | null;
   loan: number;
   ltv: number;
   ewfMonthly: number;
@@ -252,6 +253,16 @@ export function useMortgageCalculator(inputs: Inputs): MortgageResults {
     const bestProfit = bestMortgage === 'annuity' ? annuity.profitCustom : linear.profitCustom;
     const betterThanRenting = Math.round(bestProfit + rentingCost);
 
-    return { annuity, linear, rentingCost, chartData, sensitivity, bestMortgage, betterThanRenting, loan, ltv, ewfMonthly };
+    // ── Breakeven Year ────────────────────────────────────────────────────────
+    let breakevenYear: number | null = null;
+    for (const pt of chartData) {
+      const buyingNet = bestMortgage === 'annuity' ? pt.annuityNet : pt.linearNet;
+      if (buyingNet > pt.rentingNet) {
+        breakevenYear = pt.year;
+        break;
+      }
+    }
+
+    return { annuity, linear, rentingCost, chartData, sensitivity, bestMortgage, betterThanRenting, breakevenYear, loan, ltv, ewfMonthly };
   }, [inputs]);
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import { Tooltip } from './Tooltip';
+
 interface SliderProps {
   label: string;
   value: number;
@@ -10,6 +12,7 @@ interface SliderProps {
   onChange: (v: number) => void;
   accent?: 'emerald' | 'violet';
   subLabel?: string;
+  tooltip?: string;
 }
 
 export function Slider({
@@ -22,6 +25,7 @@ export function Slider({
   onChange,
   accent = 'emerald',
   subLabel,
+  tooltip,
 }: SliderProps) {
   const pct = ((value - min) / (max - min)) * 100;
   const trackColor = accent === 'violet' ? '#a78bfa' : '#10b981';
@@ -29,8 +33,9 @@ export function Slider({
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between">
-        <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+        <label className="text-xs font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1">
           {label}
+          {tooltip && <Tooltip content={tooltip} />}
         </label>
         <span
           className="text-sm font-semibold font-mono tabular-nums"

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { InputSidebar } from '@/components/InputSidebar';
 import { VerdictCard } from '@/components/VerdictCard';
 import { ComparisonTable } from '@/components/ComparisonTable';
 import { MarketSentimentTable } from '@/components/MarketSentimentTable';
+import { WelcomeBanner } from '@/components/WelcomeBanner';
 import { useMortgageCalculator, DEFAULT_ASSUMPTIONS, type Inputs } from '@/hooks/useMortgageCalculator';
 
 // Dynamic import avoids SSR issues with Recharts + ResponsiveContainer
@@ -35,10 +36,52 @@ const DEFAULT_INPUTS: Inputs = {
   assumptions: DEFAULT_ASSUMPTIONS,
 };
 
+function encodeState(inputs: Inputs): string {
+  return btoa(JSON.stringify(inputs))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function decodeState(s: string): Partial<Inputs> | null {
+  try {
+    return JSON.parse(atob(s.replace(/-/g, '+').replace(/_/g, '/')));
+  } catch {
+    return null;
+  }
+}
+
 export default function Home() {
   const [inputs, setInputs] = useState<Inputs>(DEFAULT_INPUTS);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const results = useMortgageCalculator(inputs);
+
+  // Parse URL state on first render
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const s = sp.get('s');
+    if (!s) return;
+    const decoded = decodeState(s);
+    if (decoded && typeof decoded.housePrice === 'number') {
+      setInputs(prev => ({ ...prev, ...decoded }));
+    }
+  }, []);
+
+  // Keep URL in sync whenever inputs change
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('s', encodeState(inputs));
+      window.history.replaceState({}, '', url.toString());
+    }, 600);
+    return () => clearTimeout(id);
+  }, [inputs]);
+
+  const handleCopyLink = useCallback(() => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#020617]">
@@ -71,6 +114,16 @@ export default function Home() {
                 </span>
               </div>
             </div>
+
+            {/* Share button */}
+            <button
+              onClick={handleCopyLink}
+              className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-1.5 text-xs transition-colors"
+              style={{ color: copied ? '#10b981' : '#94a3b8' }}
+              title="Copy shareable link"
+            >
+              {copied ? '✓ Copied!' : 'Share'}
+            </button>
 
             {/* Mobile sidebar toggle */}
             <button
@@ -107,6 +160,9 @@ export default function Home() {
 
         {/* ── Main Content ─────────────────────────────────────────────────── */}
         <main className="flex-1 min-w-0 p-4 sm:p-6 space-y-5">
+          {/* Welcome banner (dismissible) */}
+          <WelcomeBanner />
+
           {/* Verdict */}
           <VerdictCard results={results} inputs={inputs} />
 
@@ -115,6 +171,7 @@ export default function Home() {
             chartData={results.chartData}
             years={inputs.years}
             marketGrowth={inputs.marketGrowth}
+            breakevenYear={results.breakevenYear}
           />
 
           {/* Comparison Table */}

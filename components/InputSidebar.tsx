@@ -1,6 +1,7 @@
 'use client';
 
 import { Slider } from './ui/Slider';
+import { Tooltip } from './ui/Tooltip';
 import { AssumptionsEditor } from './AssumptionsEditor';
 import { formatEuro } from '@/lib/utils';
 import type { Inputs } from '@/hooks/useMortgageCalculator';
@@ -10,9 +11,14 @@ interface Props {
   onChange: (inputs: Inputs) => void;
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function SectionTitle({ children, step }: { children: React.ReactNode; step?: number }) {
   return (
     <div className="flex items-center gap-2 mb-3">
+      {step !== undefined && (
+        <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-500 text-[9px] font-bold flex items-center justify-center shrink-0">
+          {step}
+        </span>
+      )}
       <div className="h-px flex-1 bg-slate-800" />
       <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">
         {children}
@@ -47,10 +53,11 @@ export function InputSidebar({ inputs, onChange }: Props) {
 
       {/* Property */}
       <div>
-        <SectionTitle>Property</SectionTitle>
+        <SectionTitle step={1}>Property</SectionTitle>
         <div className="space-y-5">
           <Slider
             label="House Price"
+            tooltip="The purchase price of the property you're considering."
             value={inputs.housePrice}
             min={150_000}
             max={1_500_000}
@@ -74,8 +81,9 @@ export function InputSidebar({ inputs, onChange }: Props) {
           {/* Transfer tax — percentage, auto-linked to house price */}
           <div className="space-y-2">
             <div className="flex items-baseline justify-between">
-              <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+              <label className="text-xs font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1">
                 Transfer Tax
+                <Tooltip content="Overdrachtsbelasting: a one-time tax paid when buying. Currently 2% for most buyers. First-time buyers under 35 pay 0% up to €510k (2026)." />
               </label>
               <div className="text-right">
                 <span className="text-sm font-semibold font-mono text-emerald-400">
@@ -116,7 +124,10 @@ export function InputSidebar({ inputs, onChange }: Props) {
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-slate-500 mb-0.5">LTV Ratio</div>
+          <div className="text-[10px] text-slate-500 mb-0.5 flex items-center justify-center gap-1">
+            LTV Ratio
+            <Tooltip content="Loan-to-Value: your loan as a % of the home's value. Below 80% may unlock a better interest rate and removes NHG surcharge." />
+          </div>
           <div
             className="text-sm font-semibold font-mono"
             style={{ color: ltv > 80 ? '#f59e0b' : '#10b981' }}
@@ -128,10 +139,11 @@ export function InputSidebar({ inputs, onChange }: Props) {
 
       {/* Mortgage */}
       <div>
-        <SectionTitle>Mortgage</SectionTitle>
+        <SectionTitle step={2}>Mortgage</SectionTitle>
         <div className="space-y-5">
           <Slider
             label="Annual Interest Rate"
+            tooltip="The yearly interest rate on your mortgage. In the Netherlands, this is typically fixed for 5, 10, or 20 years. The current market average is ~4%."
             value={Math.round(inputs.annualRate * 10000) / 100}
             min={1}
             max={8}
@@ -142,6 +154,7 @@ export function InputSidebar({ inputs, onChange }: Props) {
           />
           <Slider
             label="Comparison Period"
+            tooltip="How many years you plan to own before potentially selling. Longer horizons generally favor buying since fixed sunk costs (transfer tax, notary) are spread over more years."
             value={inputs.years}
             min={1}
             max={30}
@@ -152,8 +165,9 @@ export function InputSidebar({ inputs, onChange }: Props) {
           {/* Tax relief rate — precise value, number input not slider */}
           <div className="space-y-1.5">
             <div className="flex items-baseline justify-between">
-              <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+              <label className="text-xs font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1">
                 Tax Relief Rate
+                <Tooltip content="Hypotheekrenteaftrek: you deduct mortgage interest from your taxable income. The 2026 maximum is 37.56%." />
               </label>
               <span className="text-[10px] text-slate-600">hypotheekrenteaftrek</span>
             </div>
@@ -170,7 +184,7 @@ export function InputSidebar({ inputs, onChange }: Props) {
               <span className="text-sm text-slate-500 font-medium">%</span>
             </div>
             <p className="text-[10px] text-slate-600">
-              2026 max is 37.56% · use your actual marginal rate
+              2026 max is 37.56%
             </p>
           </div>
         </div>
@@ -178,10 +192,11 @@ export function InputSidebar({ inputs, onChange }: Props) {
 
       {/* Rental Reference */}
       <div>
-        <SectionTitle>Rental Reference</SectionTitle>
+        <SectionTitle step={3}>Rental Reference</SectionTitle>
         <div className="space-y-5">
           <Slider
             label="Equivalent Monthly Rent"
+            tooltip="The rent you'd pay for a comparable property. This is the baseline for the buy-vs-rent comparison."
             value={inputs.monthlyRent}
             min={500}
             max={5_000}
@@ -192,6 +207,7 @@ export function InputSidebar({ inputs, onChange }: Props) {
           />
           <Slider
             label="Annual Rent Increase"
+            tooltip="How much rent rises each year on average. Dutch rents have increased ~4–6%/yr in recent years, compounding over time."
             value={Math.round(inputs.rentIncrease * 1000) / 10}
             min={0}
             max={10}
@@ -205,7 +221,7 @@ export function InputSidebar({ inputs, onChange }: Props) {
 
       {/* Market Sentiment */}
       <div>
-        <SectionTitle>Market Sentiment</SectionTitle>
+        <SectionTitle step={4}>Market Sentiment</SectionTitle>
         <div className="rounded-xl border border-violet-900/50 bg-violet-950/20 p-3 space-y-3">
           <Slider
             label="Annual House Price Growth"
@@ -228,7 +244,7 @@ export function InputSidebar({ inputs, onChange }: Props) {
 
       {/* Cost Assumptions */}
       <div>
-        <SectionTitle>Cost Assumptions</SectionTitle>
+        <SectionTitle step={5}>Cost Assumptions</SectionTitle>
         <AssumptionsEditor
           assumptions={inputs.assumptions}
           onChange={(assumptions) => set('assumptions', assumptions)}

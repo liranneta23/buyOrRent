@@ -31,7 +31,7 @@ function StatPill({
 }
 
 export function VerdictCard({ results, inputs }: Props) {
-  const { annuity, linear, bestMortgage, betterThanRenting, rentingCost } = results;
+  const { annuity, linear, bestMortgage, betterThanRenting, breakevenYear, rentingCost } = results;
   const best = bestMortgage === 'annuity' ? annuity : linear;
   const other = bestMortgage === 'annuity' ? linear : annuity;
   const bestLabel = bestMortgage === 'annuity' ? 'Annuity' : 'Linear';
@@ -96,6 +96,36 @@ export function VerdictCard({ results, inputs }: Props) {
             vs. paying {formatEuro(rentingCost / (inputs.years * 12))}/mo rent over {inputs.years} year
             {inputs.years !== 1 ? 's' : ''}
           </p>
+        </div>
+
+        {/* Plain-language summary */}
+        <div className="rounded-xl border border-slate-800/60 bg-slate-900/40 px-4 py-3 mb-5 text-xs text-slate-400 leading-relaxed">
+          {winning ? (
+            <>
+              With a <span className="text-slate-200 font-semibold">{bestLabel}</span> mortgage you&apos;d pay an average of{' '}
+              <span className="text-slate-200 font-semibold font-mono">{formatEuro(best.avgMonthlyNet)}/mo</span> — compared to{' '}
+              <span className="text-slate-200 font-mono">{formatEuro(Math.round(rentingCost / (inputs.years * 12)))}/mo</span> renting.
+              Over {inputs.years} year{inputs.years !== 1 ? 's' : ''} you&apos;d build{' '}
+              <span className="text-emerald-400 font-semibold font-mono">{formatEuro(best.totalEquitySaved, true)}</span> in equity
+              while your sunk costs (interest after tax relief, fees &amp; overheads) total{' '}
+              <span className="font-mono">{formatEuro(best.totalSunkCosts, true)}</span>.
+              {breakevenYear != null && (
+                <>{' '}Buying turns net-positive vs. renting at <span className="text-amber-400 font-semibold">year {breakevenYear}</span>.</>
+              )}
+            </>
+          ) : (
+            <>
+              At <span className="text-slate-200 font-semibold">{(inputs.marketGrowth * 100).toFixed(1)}%/yr</span> market growth,
+              renting comes out ahead for this {inputs.years}-year window. A{' '}
+              <span className="text-slate-200 font-semibold">{bestLabel}</span> mortgage averages{' '}
+              <span className="font-mono">{formatEuro(best.avgMonthlyNet)}/mo</span> vs.{' '}
+              <span className="font-mono">{formatEuro(Math.round(rentingCost / (inputs.years * 12)))}/mo</span> renting.
+              {breakevenYear != null && (
+                <>{' '}Buying would overtake renting at <span className="text-amber-400 font-semibold">year {breakevenYear}</span> — extend the period to see this.</>
+              )}
+              {breakevenYear == null && <>{' '}At this growth rate, buying does not overtake renting within 30 years.</>}
+            </>
+          )}
         </div>
 
         {/* Two mortgage cards */}
